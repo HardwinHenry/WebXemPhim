@@ -1,0 +1,63 @@
+const memoryStore = {
+  users: [],
+  genres: [
+    { _id: 'g1', name: 'Action', description: 'Fast-paced stories and spectacle.' },
+    { _id: 'g2', name: 'Drama', description: 'Character-driven emotional stories.' },
+    { _id: 'g3', name: 'Sci-Fi', description: 'Future worlds and speculative ideas.' },
+  ],
+  movies: [
+    {
+      _id: 'm1',
+      title: 'Neon Horizon',
+      description: 'A courier crosses a glowing megacity to deliver a secret that can reboot the future.',
+      posterUrl: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?auto=format&fit=crop&w=900&q=80',
+      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+      genreId: 'g3',
+      genreName: 'Sci-Fi',
+      duration: 118,
+      views: 12420,
+      featured: true,
+      createdAt: new Date(),
+    },
+    {
+      _id: 'm2',
+      title: 'Last Frame',
+      description: 'A retired photographer returns to the city where one unfinished picture changed his life.',
+      posterUrl: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&w=900&q=80',
+      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+      genreId: 'g2',
+      genreName: 'Drama',
+      duration: 104,
+      views: 8320,
+      featured: true,
+      createdAt: new Date(),
+    },
+    {
+      _id: 'm3',
+      title: 'Midnight Chase',
+      description: 'Two strangers have one night to expose a smuggling network hidden beneath the harbor.',
+      posterUrl: 'https://images.unsplash.com/photo-1505686994434-e3cc5abf1330?auto=format&fit=crop&w=900&q=80',
+      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+      genreId: 'g1',
+      genreName: 'Action',
+      duration: 126,
+      views: 15480,
+      featured: false,
+      createdAt: new Date(),
+    },
+  ],
+  comments: [
+    {
+      _id: 'c1',
+      movieId: 'm1',
+      content: 'Visuals are beautiful, pacing is strong.',
+      rating: 5,
+      authorName: 'Linh',
+      createdAt: new Date(),
+    },
+  ],
+  favorites: [],
+  histories: [],
+}
+
+module.exports = memoryStore
