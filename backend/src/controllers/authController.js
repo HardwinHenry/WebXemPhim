@@ -7,8 +7,16 @@ const generateToken = require('../utils/generateToken')
 const generateOTP = require('../utils/generateOTP')
 const transporter = require('../config/mail')
 
+const getRequestBody = (req) => {
+  if (!req.body || typeof req.body !== 'object' || Array.isArray(req.body)) {
+    return {}
+  }
+
+  return req.body
+}
+
 const register = async (req, res) => {
-  const { username, email, password, role } = req.body
+  const { username, email, password, role } = getRequestBody(req)
   if (!username || !email || !password) return res.status(400).json({ message: 'Username, email and password are required' })
 
   // Validate password strength: at least 1 uppercase, 1 special character (!@#$%^&*_+-=), and 1 digit
@@ -41,7 +49,9 @@ const register = async (req, res) => {
 }
 
 const login = async (req, res) => {
-  const { email, password } = req.body
+  const { email, password } = getRequestBody(req)
+  if (!email || !password) return res.status(400).json({ message: 'Email and password are required' })
+
   const user = isMongoReady() ? await User.findOne({ email }) : memoryStore.users.find((item) => item.email === email)
 
   if (!user || !(await comparePassword(password, user.password))) return res.status(401).json({ message: 'Invalid email or password' })
@@ -51,7 +61,7 @@ const login = async (req, res) => {
 }
 
 const sendOtp = async (req, res) => {
-  const { email } = req.body
+  const { email } = getRequestBody(req)
   if (!email) {
     return res.status(400).json({ message: 'Email is required' })
   }
@@ -108,7 +118,7 @@ const sendOtp = async (req, res) => {
 }
 
 const verifyOtp = async (req, res) => {
-  const { email, otp } = req.body
+  const { email, otp } = getRequestBody(req)
   if (!email || !otp) {
     return res.status(400).json({ message: 'Email and OTP are required' })
   }

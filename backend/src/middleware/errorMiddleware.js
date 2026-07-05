@@ -3,8 +3,16 @@ const notFound = (req, res) => {
 }
 
 const errorMiddleware = (error, _req, res, _next) => {
-  console.error(error)
-  res.status(500).json({ message: error.message || 'Internal server error' })
+  if (error.type === 'entity.parse.failed') {
+    return res.status(400).json({ message: 'Invalid JSON body' })
+  }
+
+  const statusCode = error.statusCode || error.status || 500
+  if (statusCode >= 500) {
+    console.error(error)
+  }
+
+  res.status(statusCode).json({ message: error.message || 'Internal server error' })
 }
 
 const asyncHandler = (handler) => async (req, res, next) => {
