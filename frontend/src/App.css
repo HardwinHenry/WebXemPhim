@@ -158,6 +158,34 @@ button {
   transform: translateY(0);
 }
 
+.login-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 8px;
+  border: none;
+  background: #ff5a5f;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(255, 90, 95, 0.25);
+}
+
+.login-button:hover {
+  background: #ff787c;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(255, 90, 95, 0.4);
+}
+
+.login-button:active {
+  transform: translateY(0);
+}
+
 main {
   min-width: 0;
   padding: 30px;

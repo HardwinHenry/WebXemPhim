@@ -16,10 +16,13 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route element={<MainLayout />}>
+        {/* Public Routes */}
+        <Route index element={<Home />} />
+        <Route path="movies" element={<Movies />} />
+        <Route path="movies/:id" element={<MovieDetail />} />
+
+        {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
-          <Route index element={<Home />} />
-          <Route path="movies" element={<Movies />} />
-          <Route path="movies/:id" element={<MovieDetail />} />
           <Route path="favorites" element={<Favorites />} />
           <Route path="history" element={<History />} />
           <Route path="profile" element={<Profile />} />

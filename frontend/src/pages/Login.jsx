@@ -14,9 +14,10 @@ export default function Login() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/')
+      const from = location.state?.from?.pathname || '/'
+      navigate(from, { replace: true })
     }
-  }, [isAuthenticated, navigate])
+  }, [isAuthenticated, navigate, location])
 
   useEffect(() => {
     if (location.state?.message) {
@@ -32,7 +33,8 @@ export default function Login() {
     setSuccess('')
     try {
       await login(form)
-      navigate('/')
+      const from = location.state?.from?.pathname || '/'
+      navigate(from, { replace: true })
     } catch {
       setError('Không thể đăng nhập. Hãy kiểm tra API hoặc thông tin tài khoản.')
     }

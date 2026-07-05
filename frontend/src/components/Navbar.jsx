@@ -42,20 +42,27 @@ export default function Navbar() {
         </nav>
 
         <div className="header-profile">
-          <Link to="/profile" className="profile-info" title="Xem thông tin cá nhân">
-            <div className="profile-avatar">
+          {user ? (
+            <>
+              <Link to="/profile" className="profile-info" title="Xem thông tin cá nhân">
+                <div className="profile-avatar">
+                  <User size={16} />
+                </div>
+                <div>
+                  <strong>{user.username}</strong>
+                  <span>{user.email}</span>
+                </div>
+              </Link>
+              <button className="logout-button" onClick={logout} title="Đăng xuất">
+                <LogOut size={18} />
+                <span>Đăng xuất</span>
+              </button>
+            </>
+          ) : (
+            <Link to="/login" className="login-button" title="Đăng nhập">
               <User size={16} />
-            </div>
-            <div>
-              <strong>{user?.username || 'Guest'}</strong>
-              <span>{user?.email || 'Chưa đăng nhập'}</span>
-            </div>
-          </Link>
-          {user && (
-            <button className="logout-button" onClick={logout} title="Đăng xuất">
-              <LogOut size={18} />
-              <span>Đăng xuất</span>
-            </button>
+              <span>Đăng nhập</span>
+            </Link>
           )}
         </div>
       </div>
