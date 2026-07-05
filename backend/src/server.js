@@ -34,6 +34,7 @@ const seedAdmin = async () => {
   }
 }
 
+
 const startServer = async () => {
   await connectDB()
   await seedAdmin()

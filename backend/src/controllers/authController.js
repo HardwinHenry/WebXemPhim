@@ -1,8 +1,11 @@
 const { isMongoReady } = require('../config/db')
 const User = require('../models/User')
+const OTP = require('../models/OTP')
 const memoryStore = require('../models/memoryStore')
 const { comparePassword, hashPassword, publicUser } = require('../services/authService')
 const generateToken = require('../utils/generateToken')
+const generateOTP = require('../utils/generateOTP')
+const transporter = require('../config/mail')
 
 const register = async (req, res) => {
   const { username, email, password, role } = req.body
@@ -47,4 +50,93 @@ const login = async (req, res) => {
   return res.json({ user: publicUser(user), token: generateToken(user) })
 }
 
-module.exports = { login, register }
+const sendOtp = async (req, res) => {
+  const { email } = req.body
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required' })
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ message: 'Invalid email address' })
+  }
+
+  const otp = generateOTP()
+
+  if (isMongoReady()) {
+    await OTP.deleteMany({ email })
+    await OTP.create({ email, otp })
+  } else {
+    if (!memoryStore.otps) {
+      memoryStore.otps = []
+    }
+    memoryStore.otps = memoryStore.otps.filter((item) => item.email !== email)
+    memoryStore.otps.push({
+      email,
+      otp,
+      createdAt: new Date()
+    })
+  }
+
+  const mailOptions = {
+    from: `"WebXemPhim" <${process.env.EMAIL_USER}>`,
+    to: email,
+    subject: '[WebXemPhim] Mã xác thực OTP của bạn',
+    text: `Mã OTP của bạn là: ${otp}. Mã này có hiệu lực trong 5 phút.`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <h2 style="color: #2b6cb0; text-align: center;">Mã Xác Thực OTP</h2>
+        <p>Xin chào,</p>
+        <p>Bạn vừa yêu cầu mã xác thực OTP từ <strong>WebXemPhim</strong>.</p>
+        <div style="background-color: #f7fafc; padding: 15px; border-radius: 6px; text-align: center; margin: 20px 0;">
+          <span style="font-size: 24px; font-weight: bold; letter-spacing: 4px; color: #2d3748;">${otp}</span>
+        </div>
+        <p style="color: #718096; font-size: 14px;">Mã OTP này có hiệu lực trong vòng <strong>5 phút</strong>. Vui lòng không chia sẻ mã này với bất kỳ ai.</p>
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
+        <p style="font-size: 12px; color: #a0aec0; text-align: center;">Đây là email tự động, vui lòng không phản hồi email này.</p>
+      </div>
+    `
+  }
+
+  try {
+    await transporter.sendMail(mailOptions)
+    return res.status(200).json({ message: 'OTP sent successfully' })
+  } catch (error) {
+    console.error('Failed to send email:', error)
+    return res.status(500).json({ message: 'Failed to send OTP email', error: error.message })
+  }
+}
+
+const verifyOtp = async (req, res) => {
+  const { email, otp } = req.body
+  if (!email || !otp) {
+    return res.status(400).json({ message: 'Email and OTP are required' })
+  }
+
+  if (isMongoReady()) {
+    const record = await OTP.findOne({ email, otp })
+    if (!record) {
+      return res.status(400).json({ message: 'Mã OTP không hợp lệ hoặc đã hết hạn.' })
+    }
+    await OTP.deleteMany({ email })
+    return res.status(200).json({ message: 'Xác thực OTP thành công!' })
+  } else {
+    if (!memoryStore.otps) {
+      memoryStore.otps = []
+    }
+    const recordIndex = memoryStore.otps.findIndex((item) => item.email === email && item.otp === otp)
+    if (recordIndex === -1) {
+      return res.status(400).json({ message: 'Mã OTP không hợp lệ hoặc đã hết hạn.' })
+    }
+    const record = memoryStore.otps[recordIndex]
+    const now = new Date()
+    if (now - record.createdAt > 5 * 60 * 1000) {
+      memoryStore.otps.splice(recordIndex, 1)
+      return res.status(400).json({ message: 'Mã OTP đã hết hạn.' })
+    }
+    memoryStore.otps.splice(recordIndex, 1)
+    return res.status(200).json({ message: 'Xác thực OTP thành công!' })
+  }
+}
+
+module.exports = { login, register, sendOtp, verifyOtp }

@@ -58,6 +58,7 @@ const memoryStore = {
   ],
   favorites: [],
   histories: [],
+  otps: [],
 }
 
 module.exports = memoryStore
