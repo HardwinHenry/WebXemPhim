@@ -72,6 +72,7 @@ const sendOtp = async (req, res) => {
   }
 
   const otp = generateOTP()
+  console.log(`[DEBUG] Mã OTP cho ${email} là: ${otp}`)
 
   if (isMongoReady()) {
     await OTP.deleteMany({ email })
