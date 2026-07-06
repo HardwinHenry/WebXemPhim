@@ -20,6 +20,14 @@ const app = express()
 app.use(cors({ origin: process.env.CLIENT_URL || '*' }))
 app.use(express.json({ limit: '20mb' }))
 
+app.get('/', (_req, res) => {
+  res.json({
+    ok: true,
+    message: 'WebXemPhim API is running',
+    health: '/api/health',
+  })
+})
+
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, database: isMongoReady() ? 'mongodb' : 'memory' })
 })
