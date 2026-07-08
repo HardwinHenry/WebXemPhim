@@ -54,6 +54,8 @@ export function MovieProvider({ children }) {
         'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?auto=format&fit=crop&w=900&q=80',
       videoUrl: payload.videoUrl.trim() || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
       genreName: payload.genreName,
+      quality: payload.quality || 'HD',
+      rating: 4.5,
       duration: Number(payload.duration),
       views: 0,
       featured: false,

@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 import AdminLayout from '../layouts/AdminLayout'
 import MainLayout from '../layouts/MainLayout'
+import AdminUpload from '../pages/AdminUpload'
 import Favorites from '../pages/Favorites'
 import History from '../pages/History'
 import Home from '../pages/Home'
@@ -30,6 +31,7 @@ export default function AppRoutes() {
         <Route element={<ProtectedRoute adminOnly />}>
           <Route element={<AdminLayout />}>
             <Route path="admin" element={<Profile admin />} />
+            <Route path="admin/upload" element={<AdminUpload />} />
           </Route>
         </Route>
         <Route path="*" element={<NotFound />} />

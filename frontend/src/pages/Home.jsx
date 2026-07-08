@@ -1,63 +1,93 @@
-import { Heart, Play } from 'lucide-react'
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import MovieCard from '../components/MovieCard'
+import HeroBanner from '../components/HeroBanner'
+import MovieCarousel from '../components/MovieCarousel'
+import GenrePills from '../components/GenrePills'
 import useMovies from '../hooks/useMovies'
+import { getUniqueGenres } from '../utils/helpers'
 
 export default function Home() {
   const navigate = useNavigate()
-  const { favorites, featuredMovie, movies, selectMovie, toggleFavorite } = useMovies()
+  const { featuredMovie, favorites, movies, selectMovie, toggleFavorite } = useMovies()
 
   const watchMovie = (movie) => {
     selectMovie(movie)
     navigate(`/movies/${movie._id}`)
   }
 
+  const genres = useMemo(() => getUniqueGenres(movies), [movies])
+
+  const topPicks = useMemo(
+    () => [...movies].sort((a, b) => b.views - a.views).slice(0, 8),
+    [movies],
+  )
+
+  const newReleases = useMemo(
+    () => [...movies].slice(0, 8).reverse(),
+    [movies],
+  )
+
+  const trending = useMemo(
+    () => movies.filter((m) => m.featured).slice(0, 8),
+    [movies],
+  )
+
   return (
     <>
-      <header className="topbar">
-        <div>
-          <p className="eyebrow">Website xem phim trực tuyến</p>
-          <h1>Khám phá phim mới hôm nay</h1>
-        </div>
-      </header>
+      <HeroBanner
+        featured={featuredMovie}
+        related={topPicks}
+        favorites={favorites}
+        onSelect={watchMovie}
+        onFavorite={toggleFavorite}
+      />
 
-      <section className="hero-panel">
-        <img src={featuredMovie.posterUrl} alt="" />
-        <div className="hero-content">
-          <span>{featuredMovie.genreName}</span>
-          <h2>{featuredMovie.title}</h2>
-          <p>{featuredMovie.description}</p>
-          <div className="hero-actions">
-            <button className="primary-button" onClick={() => watchMovie(featuredMovie)} type="button">
-              <Play size={18} fill="currentColor" />
-              Xem ngay
-            </button>
-            <button className="icon-button" onClick={() => toggleFavorite(featuredMovie._id)} type="button" title="Yêu thích">
-              <Heart size={18} fill={favorites.includes(featuredMovie._id) ? 'currentColor' : 'none'} />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section className="catalog-panel">
-        <div className="section-heading">
-          <div>
-            <p className="eyebrow">Nổi bật</p>
-            <h2>Phim đang xem nhiều</h2>
-          </div>
-        </div>
-        <div className="movie-grid">
-          {movies.map((movie) => (
-            <MovieCard
-              isFavorite={favorites.includes(movie._id)}
-              key={movie._id}
-              movie={movie}
-              onFavorite={toggleFavorite}
-              onSelect={watchMovie}
+      <main>
+        <section className="section" style={{ paddingTop: 48 }}>
+          <div className="container">
+            <div className="section-header">
+              <div>
+                <span className="section-eyebrow">Khám phá</span>
+                <h2 className="section-title">Chọn thể loại yêu thích của bạn</h2>
+              </div>
+            </div>
+            <GenrePills
+              genres={genres}
+              active="Tất cả"
+              onChange={() => navigate('/movies')}
             />
-          ))}
-        </div>
-      </section>
+          </div>
+        </section>
+
+        <MovieCarousel
+          title="Đang thịnh hành"
+          eyebrow="Top lượt xem"
+          movies={topPicks}
+          favorites={favorites}
+          onSelect={watchMovie}
+          onFavorite={toggleFavorite}
+        />
+
+        {trending.length > 0 && (
+          <MovieCarousel
+            title="Nổi bật tuần này"
+            eyebrow="Editor's pick"
+            movies={trending}
+            favorites={favorites}
+            onSelect={watchMovie}
+            onFavorite={toggleFavorite}
+          />
+        )}
+
+        <MovieCarousel
+          title="Mới phát hành"
+          eyebrow="Fresh drops"
+          movies={newReleases}
+          favorites={favorites}
+          onSelect={watchMovie}
+          onFavorite={toggleFavorite}
+        />
+      </main>
     </>
   )
 }

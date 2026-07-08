@@ -4,7 +4,7 @@ const { uploadFile } = require('../controllers/uploadController')
 const adminMiddleware = require('../middleware/adminMiddleware')
 const authMiddleware = require('../middleware/authMiddleware')
 const { asyncHandler } = require('../middleware/errorMiddleware')
-const upload = require('../middleware/uploadMiddleware')
+const { upload } = require('../middleware/uploadMiddleware')
 
 const router = express.Router()
 

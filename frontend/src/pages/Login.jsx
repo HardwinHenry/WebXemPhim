@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Film, Lock, Mail } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import useAuth from '../hooks/useAuth'
 
 export default function Login() {
@@ -22,7 +22,6 @@ export default function Login() {
   useEffect(() => {
     if (location.state?.message) {
       setSuccess(location.state.message)
-      // Clear navigation state to avoid alert showing again on refresh
       window.history.replaceState({}, document.title)
     }
   }, [location])
@@ -41,43 +40,111 @@ export default function Login() {
   }
 
   return (
-    <div className="auth-page-wrapper">
-      <section className="auth-card">
-        <p className="eyebrow">Tài khoản</p>
-        <h1>Đăng nhập</h1>
-        <form className="movie-form" onSubmit={submit}>
-          <input
-            value={form.email}
-            onChange={(event) => setForm({ ...form, email: event.target.value })}
-            placeholder="Email"
-            type="email"
-            required
-          />
-          <div className="password-input-container">
-            <input
-              value={form.password}
-              onChange={(event) => setForm({ ...form, password: event.target.value })}
-              placeholder="Mật khẩu"
-              type={showPassword ? 'text' : 'password'}
-              required
-            />
-            <button
-              type="button"
-              className="toggle-password-btn"
-              onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiển thị mật khẩu'}
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
+    <div className="auth-page">
+      <div className="auth-card">
+        <div
+          style={{
+            display: 'grid',
+            placeItems: 'center',
+            width: 56,
+            height: 56,
+            borderRadius: 14,
+            background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+            margin: '0 auto 20px',
+            color: '#fff',
+            boxShadow: '0 8px 30px rgba(139, 92, 246, 0.4)',
+          }}
+        >
+          <Film size={24} />
+        </div>
+        <span className="section-eyebrow" style={{ display: 'block', textAlign: 'center' }}>
+          Chào mừng trở lại
+        </span>
+        <h1>Đăng nhập CineFlow</h1>
+        <p className="page-subtitle">Tiếp tục hành trình điện ảnh của bạn</p>
+
+        <form className="auth-form" onSubmit={submit}>
+          <div className="auth-field">
+            <label>Email</label>
+            <div style={{ position: 'relative' }}>
+              <Mail
+                size={16}
+                style={{
+                  position: 'absolute',
+                  left: 16,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--color-text-muted)',
+                }}
+              />
+              <input
+                style={{ paddingLeft: 42, width: '100%' }}
+                value={form.email}
+                onChange={(event) => setForm({ ...form, email: event.target.value })}
+                placeholder="you@cineflow.com"
+                type="email"
+                required
+              />
+            </div>
           </div>
+
+          <div className="auth-field">
+            <label>Mật khẩu</label>
+            <div style={{ position: 'relative' }}>
+              <Lock
+                size={16}
+                style={{
+                  position: 'absolute',
+                  left: 16,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'var(--color-text-muted)',
+                }}
+              />
+              <input
+                style={{ paddingLeft: 42, paddingRight: 42, width: '100%' }}
+                value={form.password}
+                onChange={(event) => setForm({ ...form, password: event.target.value })}
+                placeholder="••••••••"
+                type={showPassword ? 'text' : 'password'}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                style={{
+                  position: 'absolute',
+                  right: 12,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'transparent',
+                  border: 0,
+                  color: 'var(--color-text-muted)',
+                  cursor: 'pointer',
+                  display: 'grid',
+                  placeItems: 'center',
+                  width: 28,
+                  height: 28,
+                }}
+                aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiển thị mật khẩu'}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
+
           {error && <p className="form-error">{error}</p>}
           {success && <p className="form-success">{success}</p>}
-          <button className="primary-button" type="submit">
+
+          <button className="auth-submit" type="submit">
             Đăng nhập
           </button>
-          <Link to="/register">Tạo tài khoản mới</Link>
         </form>
-      </section>
+
+        <p className="auth-footer">
+          Chưa có tài khoản? <Link to="/register">Đăng ký ngay</Link>
+        </p>
+      </div>
     </div>
   )
 }
