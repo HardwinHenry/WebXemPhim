@@ -9,6 +9,7 @@ import {
   VolumeX,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { resolveMediaUrl } from '../services/api'
 
 const SPEED_OPTIONS = [0.5, 0.75, 1, 1.25, 1.5, 2]
 
@@ -57,9 +58,11 @@ export default function VideoPlayer({ movie, autoplay = false, subtitles = [] })
   }, [volume, muted, speed])
 
   useEffect(() => {
-    if (movie?.cast && Array.isArray(movie.cast)) {
-      // Cast is available from movie prop
-    }
+    setPlaying(false)
+    setProgress(0)
+    setCurrentTime(0)
+    setShowPoster(true)
+    setVideoError(null)
   }, [movie])
 
   const startHideTimer = () => {
@@ -144,8 +147,11 @@ export default function VideoPlayer({ movie, autoplay = false, subtitles = [] })
     v.load()
   }
 
-  const poster = movie?.posterUrl
-  const videoSrc = movie?.videoUrl
+  const firstEpisode = movie?.seasons
+    ?.flatMap((season) => season?.episodes || [])
+    .find((episode) => episode?.video)
+  const poster = resolveMediaUrl(firstEpisode?.thumbnail || movie?.thumbnailUrl || movie?.posterUrl)
+  const videoSrc = resolveMediaUrl(firstEpisode?.video || movie?.videoUrl)
 
   return (
     <div

@@ -8,7 +8,8 @@ const authMiddleware = (req, res, next) => {
   try {
     req.user = jwt.verify(token, JWT_SECRET)
     return next()
-  } catch {
+  } catch (err) {
+    console.error('[Auth] JWT verify failed:', err.message)
     return res.status(401).json({ message: 'Invalid token' })
   }
 }

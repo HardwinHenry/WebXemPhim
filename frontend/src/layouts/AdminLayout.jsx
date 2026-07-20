@@ -27,7 +27,7 @@ export default function AdminLayout() {
             <Film size={18} />
             Quản lý Phim
           </Link>
-          <Link to="/admin" className="admin-nav-item">
+          <Link to="/admin/upload" className="admin-nav-item">
             <Plus size={18} />
             Thêm Nội dung
           </Link>

@@ -4,7 +4,6 @@ import {
   Heart,
   History,
   LogOut,
-  Plus,
   Settings,
   Shield,
   Star,
@@ -12,11 +11,11 @@ import {
   Upload,
   User,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import useAuth from '../hooks/useAuth'
 import useMovies from '../hooks/useMovies'
-import { getUniqueGenres } from '../utils/helpers'
+import { resolveMediaUrl } from '../services/api'
+import { getContentBadge, getContentSummary } from '../utils/movieContent'
 
 function Stat({ icon: Icon, label, value, accent = 'violet' }) {
   const colors = {
@@ -38,36 +37,7 @@ function Stat({ icon: Icon, label, value, accent = 'violet' }) {
 
 export default function Profile({ admin = false }) {
   const { logout, user } = useAuth()
-  const { addMovie, deleteMovie, favoriteMovies, historyMovies, movies, totalViews } =
-    useMovies()
-  const genres = useMemo(
-    () => getUniqueGenres(movies).filter((item) => item !== 'Tất cả'),
-    [movies],
-  )
-  const [newMovie, setNewMovie] = useState({
-    title: '',
-    genreName: genres[0] || 'Action',
-    duration: 100,
-    posterUrl: '',
-    videoUrl: '',
-    description: '',
-    quality: 'HD',
-  })
-
-  const submitMovie = (event) => {
-    event.preventDefault()
-    if (!newMovie.title.trim()) return
-    addMovie(newMovie)
-    setNewMovie({
-      title: '',
-      genreName: genres[0] || 'Action',
-      duration: 100,
-      posterUrl: '',
-      videoUrl: '',
-      description: '',
-      quality: 'HD',
-    })
-  }
+  const { deleteMovie, favoriteMovies, historyMovies, movies, totalViews } = useMovies()
 
   if (!admin) {
     return (
@@ -89,34 +59,19 @@ export default function Profile({ admin = false }) {
             </div>
 
             <div className="profile-stats stagger">
-              <Stat
-                icon={Heart}
-                label="Phim yêu thích"
-                value={favoriteMovies.length}
-                accent="violet"
-              />
+              <Stat icon={Heart} label="Phim yêu thích" value={favoriteMovies.length} accent="violet" />
               <Stat icon={History} label="Đã xem" value={historyMovies.length} accent="cyan" />
-              <Stat
-                icon={Star}
-                label="Đánh giá TB"
-                value="4.7"
-                accent="amber"
-              />
+              <Stat icon={Star} label="Đánh giá TB" value="4.7" accent="amber" />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div className="profile-actions">
               {user?.role === 'admin' && (
-                <Link to="/admin" className="btn-primary" style={{ height: 46 }}>
+                <Link to="/admin" className="btn-primary profile-action-button">
                   <Shield size={16} />
                   Đến trang Quản trị
                 </Link>
               )}
-              <button
-                className="btn-danger-ghost"
-                onClick={logout}
-                style={{ height: 46, justifyContent: 'center' }}
-                type="button"
-              >
+              <button className="btn-danger-ghost profile-action-button" onClick={logout} type="button">
                 <LogOut size={16} />
                 Đăng xuất tài khoản
               </button>
@@ -134,12 +89,12 @@ export default function Profile({ admin = false }) {
           <span className="section-eyebrow">Bảng điều khiển</span>
           <h1 className="page-title">Trang quản trị</h1>
           <p className="page-subtitle">
-            Quản lý kho phim, thêm nội dung mới và theo dõi số liệu hệ thống.
+            Quản lý kho nội dung, thêm phim mới và theo dõi số liệu trên trình duyệt này.
           </p>
         </div>
 
-        <div className="profile-stats stagger" style={{ marginBottom: 32 }}>
-          <Stat icon={Film} label="Tổng phim" value={movies.length} accent="violet" />
+        <div className="profile-stats stagger admin-stat-row">
+          <Stat icon={Film} label="Tổng nội dung" value={movies.length} accent="violet" />
           <Stat icon={User} label="Người dùng" value="—" accent="cyan" />
           <Stat
             icon={BarChart3}
@@ -149,173 +104,54 @@ export default function Profile({ admin = false }) {
           />
         </div>
 
-        <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
-          <Link to="/admin/upload" className="btn-primary" style={{ height: 46 }}>
+        <div className="admin-dashboard-actions">
+          <Link to="/admin/upload" className="btn-primary admin-primary-action">
             <Upload size={16} />
-            Upload Phim Mới
+            Thêm nội dung mới
           </Link>
-          <button className="btn-ghost" type="button" style={{ height: 46 }}>
-            <Plus size={16} />
-            Thêm bằng URL
-          </button>
+          <p>Một form duy nhất để tạo phim lẻ, phim bộ, TV show, anime và phim tài liệu.</p>
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0, 420px) minmax(0, 1fr)',
-            gap: 24,
-            alignItems: 'start',
-          }}
-        >
-          <form
-            className="comment-form-card"
-            onSubmit={submitMovie}
-            style={{ padding: 24 }}
-          >
-            <div className="section-header" style={{ marginBottom: 12 }}>
-              <div>
-                <span className="section-eyebrow">Quản trị nội dung</span>
-                <h2 className="section-title">Thêm phim mới</h2>
-              </div>
-              <Upload size={20} color="#c4b5fd" />
+        <section className="comment-form-card admin-library-panel">
+          <div className="section-header admin-library-heading">
+            <div>
+              <span className="section-eyebrow">Thư viện</span>
+              <h2 className="section-title">Nội dung hiện có ({movies.length})</h2>
             </div>
-
-            <div className="auth-form">
-              <div className="auth-field">
-                <label>Tên phim</label>
-                <input
-                  placeholder="Nhập tên phim..."
-                  value={newMovie.title}
-                  onChange={(e) => setNewMovie({ ...newMovie, title: e.target.value })}
-                />
-              </div>
-              <div className="auth-field">
-                <label>Mô tả</label>
-                <textarea
-                  placeholder="Mô tả nội dung..."
-                  rows={3}
-                  value={newMovie.description}
-                  onChange={(e) => setNewMovie({ ...newMovie, description: e.target.value })}
-                  style={{
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid var(--color-border-default)',
-                    color: '#fff',
-                    borderRadius: 10,
-                    padding: 12,
-                    resize: 'vertical',
-                    fontFamily: 'inherit',
-                  }}
-                />
-              </div>
-              <div className="auth-field">
-                <label>Thể loại</label>
-                <select
-                  value={newMovie.genreName}
-                  onChange={(e) => setNewMovie({ ...newMovie, genreName: e.target.value })}
-                >
-                  {genres.map((g) => (
-                    <option key={g} value={g}>
-                      {g}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="auth-field">
-                <label>Thời lượng (phút)</label>
-                <input
-                  min="1"
-                  type="number"
-                  value={newMovie.duration}
-                  onChange={(e) => setNewMovie({ ...newMovie, duration: e.target.value })}
-                />
-              </div>
-              <div className="auth-field">
-                <label>Chất lượng</label>
-                <select
-                  value={newMovie.quality}
-                  onChange={(e) => setNewMovie({ ...newMovie, quality: e.target.value })}
-                >
-                  <option>4K</option>
-                  <option>HD</option>
-                  <option>FHD</option>
-                </select>
-              </div>
-              <div className="auth-field">
-                <label>Poster URL</label>
-                <input
-                  placeholder="https://..."
-                  value={newMovie.posterUrl}
-                  onChange={(e) => setNewMovie({ ...newMovie, posterUrl: e.target.value })}
-                />
-              </div>
-              <div className="auth-field">
-                <label>Video URL</label>
-                <input
-                  placeholder="https://..."
-                  value={newMovie.videoUrl}
-                  onChange={(e) => setNewMovie({ ...newMovie, videoUrl: e.target.value })}
-                />
-              </div>
-              <button className="btn-primary" type="submit" style={{ height: 46 }}>
-                <Plus size={18} />
-                Thêm phim
-              </button>
-            </div>
-          </form>
-
-          <div className="comment-form-card" style={{ padding: 24 }}>
-            <div className="section-header" style={{ marginBottom: 12 }}>
-              <div>
-                <span className="section-eyebrow">Danh sách</span>
-                <h2 className="section-title">Phim hiện có ({movies.length})</h2>
-              </div>
-              <Settings size={20} color="#c4b5fd" />
-            </div>
-            <div className="admin-list" style={{ display: 'grid', gap: 10 }}>
-              {movies.map((movie) => (
-                <div
-                  key={movie._id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: 10,
-                    background: 'rgba(255,255,255,0.03)',
-                    border: '1px solid var(--color-border-subtle)',
-                    borderRadius: 12,
-                  }}
-                >
-                  <img
-                    src={movie.posterUrl}
-                    alt=""
-                    style={{
-                      width: 56,
-                      height: 76,
-                      borderRadius: 8,
-                      objectFit: 'cover',
-                    }}
-                  />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <strong style={{ color: '#fff', display: 'block' }}>{movie.title}</strong>
-                    <span style={{ color: 'var(--color-text-muted)', fontSize: '0.82rem' }}>
-                      {movie.genreName} · {movie.duration} phút · {movie.quality || 'HD'}
-                    </span>
-                  </div>
-                  <button
-                    className="btn-danger-ghost"
-                    onClick={() => deleteMovie(movie._id)}
-                    type="button"
-                    style={{ width: 36, height: 36, padding: 0 }}
-                    title="Xóa phim"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
+            <Settings size={20} color="#c4b5fd" />
           </div>
-        </div>
+          <div className="admin-dashboard-list">
+            {movies.map((movie) => (
+              <article className="admin-dashboard-item" key={movie._id}>
+                <img
+                  alt={movie.title}
+                  onError={(event) => {
+                    event.currentTarget.src =
+                      'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?auto=format&fit=crop&w=900&q=80'
+                  }}
+                  src={resolveMediaUrl(movie.posterUrl)}
+                />
+                <div className="admin-dashboard-info">
+                  <span className="content-type-mini-badge">{getContentBadge(movie)}</span>
+                  <strong>{movie.title}</strong>
+                  <small>
+                    {movie.genreName || 'Khác'} · {getContentSummary(movie)} · {movie.quality || 'HD'}
+                  </small>
+                </div>
+                <button
+                  className="btn-danger-ghost admin-dashboard-delete"
+                  onClick={() => deleteMovie(movie._id)}
+                  title="Xóa nội dung"
+                  type="button"
+                >
+                  <Trash2 size={16} />
+                  Xóa
+                </button>
+              </article>
+            ))}
+            {!movies.length && <p className="admin-empty-copy">Chưa có nội dung trong thư viện.</p>}
+          </div>
+        </section>
       </div>
     </div>
   )

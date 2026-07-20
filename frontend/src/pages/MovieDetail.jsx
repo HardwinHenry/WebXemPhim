@@ -13,7 +13,9 @@ import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import VideoPlayer from '../components/VideoPlayer'
 import useMovies from '../hooks/useMovies'
+import { getContentBadge, getContentSummary } from '../utils/movieContent'
 import { formatViews } from '../utils/helpers'
+import { resolveMediaUrl } from '../services/api'
 
 const RATING_LABELS = {
   1: 'Tệ',
@@ -61,6 +63,17 @@ export default function MovieDetail() {
   const [hoverRating, setHoverRating] = useState(null)
 
   const movie = movies.find((m) => m._id === id) || movies[0]
+
+  if (!movie) {
+    return (
+      <div className="search-page">
+        <div className="container">
+          <div className="empty-state">Thư viện chưa có nội dung để hiển thị.</div>
+        </div>
+      </div>
+    )
+  }
+
   const selectedComments = comments.filter((c) => c.movieId === movie._id)
   const ratedComments = selectedComments.filter((c) => c.rating)
 
@@ -90,7 +103,7 @@ export default function MovieDetail() {
   return (
     <>
       <div className="detail-bg">
-        <img src={movie.posterUrl} alt="" />
+        <img src={resolveMediaUrl(movie.posterUrl)} alt="" />
       </div>
 
       <div className="detail-page">
@@ -99,7 +112,7 @@ export default function MovieDetail() {
             <div className="detail-poster">
               <span className="detail-poster-badge">{movie.quality || '4K'}</span>
               <img
-                src={movie.posterUrl}
+                src={resolveMediaUrl(movie.posterUrl)}
                 alt={movie.title}
                 onError={(e) => {
                   e.currentTarget.src =
@@ -111,7 +124,7 @@ export default function MovieDetail() {
             <div className="detail-content">
               <span className="detail-eyebrow">
                 <Film size={12} />
-                {movie.genreName || 'Phim'}
+                {getContentBadge(movie)} · {movie.genreName || 'Phim'}
               </span>
 
               <h1 className="detail-title">{movie.title}</h1>
@@ -119,14 +132,14 @@ export default function MovieDetail() {
               <div className="detail-tags">
                 <span className="detail-tag">HD Vietsub</span>
                 <span className="detail-tag">{movie.quality || '4K Ultra HD'}</span>
-                <span className="detail-tag">2026</span>
+                <span className="detail-tag">{movie.year || '—'}</span>
                 <span className="detail-tag">18+</span>
               </div>
 
               <div className="detail-meta">
                 <span className="detail-meta-item">
                   <Clock3 size={16} />
-                  {movie.duration} phút
+                  {getContentSummary(movie)}
                 </span>
                 <span className="detail-meta-item">
                   <Eye size={16} />
@@ -134,7 +147,7 @@ export default function MovieDetail() {
                 </span>
                 <span className="detail-meta-item">
                   <Calendar size={16} />
-                  2026
+                  {movie.year || '—'}
                 </span>
                 <span className="detail-meta-item">
                   <Users size={16} />
@@ -197,7 +210,9 @@ export default function MovieDetail() {
                   Diễn viên chính
                 </h3>
                 <div className="cast-list">
-                  {(movie.cast || ['Trần Anh Khoa', 'Linh Phạm', 'Minh Tuấn', 'Hà My']).map(
+                  {(Array.isArray(movie.cast) && movie.cast.length
+                    ? movie.cast
+                    : ['Trần Anh Khoa', 'Linh Phạm', 'Minh Tuấn', 'Hà My']).map(
                     (name, i) => (
                       <div className="cast-chip" key={i}>
                         <span className="cast-avatar">{name.charAt(0)}</span>

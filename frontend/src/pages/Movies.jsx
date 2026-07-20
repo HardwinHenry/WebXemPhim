@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import ContentTypePills from '../components/ContentTypePills'
 import GenrePills from '../components/GenrePills'
 import MovieCard from '../components/MovieCard'
 import Pagination from '../components/Pagination'
 import SearchBar from '../components/SearchBar'
 import { SkeletonGrid } from '../components/SkeletonCard'
 import useMovies from '../hooks/useMovies'
+import { getMovieType } from '../utils/movieContent'
 import { getUniqueGenres } from '../utils/helpers'
 
 const pageSize = 12
@@ -17,6 +19,7 @@ export default function Movies() {
 
   const [query, setQuery] = useState(searchParams.get('q') || '')
   const [genre, setGenre] = useState(searchParams.get('g') || 'Tất cả')
+  const [contentType, setContentType] = useState(searchParams.get('t') || 'all')
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
 
@@ -31,22 +34,24 @@ export default function Movies() {
         const p = new URLSearchParams()
         if (query) p.set('q', query)
         if (genre !== 'Tất cả') p.set('g', genre)
+        if (contentType !== 'all') p.set('t', contentType)
         return p
       })(),
       { replace: true },
     )
-  }, [query, genre, setSearchParams])
+  }, [contentType, genre, query, setSearchParams])
 
   const genres = useMemo(() => getUniqueGenres(movies), [movies])
   const filteredMovies = useMemo(
     () =>
       movies.filter((movie) => {
         const q = query.toLowerCase()
-        const matchesQuery = !q || movie.title.toLowerCase().includes(q)
+        const matchesQuery = !q || String(movie.title || '').toLowerCase().includes(q)
         const matchesGenre = genre === 'Tất cả' || movie.genreName === genre
-        return matchesQuery && matchesGenre
+        const matchesContentType = contentType === 'all' || getMovieType(movie) === contentType
+        return matchesQuery && matchesGenre && matchesContentType
       }),
-    [genre, movies, query],
+    [contentType, genre, movies, query],
   )
 
   const pages = Math.max(1, Math.ceil(filteredMovies.length / pageSize))
@@ -77,15 +82,28 @@ export default function Movies() {
           placeholder="Tìm phim, diễn viên, đạo diễn..."
         />
 
-        <div style={{ marginTop: 28 }}>
-          <GenrePills
-            genres={genres}
-            active={genre}
-            onChange={(g) => {
-              setGenre(g)
-              setPage(1)
-            }}
-          />
+        <div className="library-filter-stack">
+          <div>
+            <span className="filter-label">Loại nội dung</span>
+            <ContentTypePills
+              active={contentType}
+              onChange={(type) => {
+                setContentType(type)
+                setPage(1)
+              }}
+            />
+          </div>
+          <div>
+            <span className="filter-label">Thể loại</span>
+            <GenrePills
+              genres={genres}
+              active={genre}
+              onChange={(g) => {
+                setGenre(g)
+                setPage(1)
+              }}
+            />
+          </div>
         </div>
 
         <div className="section-header" style={{ marginTop: 20 }}>

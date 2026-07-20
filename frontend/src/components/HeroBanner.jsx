@@ -1,6 +1,8 @@
 import { Heart, Info, Play, Plus, Star } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { getContentSummary } from '../utils/movieContent'
 import { formatViews } from '../utils/helpers'
+import { resolveMediaUrl } from '../services/api'
 
 export default function HeroBanner({ featured, related = [], favorites, onSelect, onFavorite }) {
   const navigate = useNavigate()
@@ -18,7 +20,7 @@ export default function HeroBanner({ featured, related = [], favorites, onSelect
     <section className="hero">
       <div className="hero-media">
         <img
-          src={featured.posterUrl}
+          src={resolveMediaUrl(featured.posterUrl)}
           alt=""
           onError={(e) => {
             e.currentTarget.src =
@@ -73,11 +75,11 @@ export default function HeroBanner({ featured, related = [], favorites, onSelect
                   {featured.rating || '4.8'}
                 </span>
                 <span className="hero-meta-divider" />
-                <span className="hero-meta-item">{featured.duration} phút</span>
+                <span className="hero-meta-item">{getContentSummary(featured)}</span>
                 <span className="hero-meta-divider" />
                 <span className="hero-meta-item">{formatViews(featured.views)} lượt xem</span>
                 <span className="hero-meta-divider" />
-                <span className="hero-meta-item">2026</span>
+                <span className="hero-meta-item">{featured.year || '—'}</span>
               </div>
               <p className="hero-description">{featured.description}</p>
               <div className="hero-actions">
@@ -111,14 +113,14 @@ export default function HeroBanner({ featured, related = [], favorites, onSelect
                   >
                     <img
                       className="hero-side-thumb"
-                      src={m.posterUrl}
+                      src={resolveMediaUrl(m.posterUrl)}
                       alt={m.title}
                       loading="lazy"
                     />
                     <div className="hero-side-info">
                       <small>Gợi ý #{i + 1}</small>
                       <strong>{m.title}</strong>
-                      <p>{m.genreName} · {m.duration} phút</p>
+                      <p>{m.genreName} · {getContentSummary(m)}</p>
                     </div>
                     <Play size={16} fill="currentColor" style={{ color: 'var(--color-text-muted)' }} />
                   </button>

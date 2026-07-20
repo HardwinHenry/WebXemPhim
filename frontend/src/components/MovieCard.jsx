@@ -1,5 +1,7 @@
 import { Eye, Heart, Play, Star } from 'lucide-react'
+import { getContentBadge, getContentSummary } from '../utils/movieContent'
 import { formatViews } from '../utils/helpers'
+import { resolveMediaUrl } from '../services/api'
 
 export default function MovieCard({ isFavorite, movie, onFavorite, onSelect }) {
   const handleFavorite = (e) => {
@@ -18,7 +20,7 @@ export default function MovieCard({ isFavorite, movie, onFavorite, onSelect }) {
         aria-label={`Xem phim ${movie.title}`}
       >
         <img
-          src={movie.posterUrl}
+          src={resolveMediaUrl(movie.posterUrl)}
           alt={movie.title}
           loading="lazy"
           onError={(e) => {
@@ -27,6 +29,7 @@ export default function MovieCard({ isFavorite, movie, onFavorite, onSelect }) {
           }}
         />
         <span className="movie-quality">{movie.quality || 'HD'}</span>
+        <span className="movie-type-badge">{getContentBadge(movie)}</span>
         <button
           className={`movie-fav ${isFavorite ? 'active' : ''}`}
           onClick={handleFavorite}
@@ -58,7 +61,7 @@ export default function MovieCard({ isFavorite, movie, onFavorite, onSelect }) {
         <div className="movie-meta">
           <span>{movie.genreName || 'Phim'}</span>
           <span className="dot" />
-          <span>{movie.duration} phút</span>
+          <span>{getContentSummary(movie)}</span>
         </div>
       </div>
     </article>

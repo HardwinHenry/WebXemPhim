@@ -1,7 +1,12 @@
 const { isMongoReady } = require('../config/db')
 const Movie = require('../models/Movie')
 const memoryStore = require('../models/memoryStore')
-const { uploadVideo, uploadPoster, uploadThumbnail, destroy } = require('../services/cloudinaryService')
+const {
+  localUploadVideo,
+  localUploadPoster,
+  localUploadThumbnail,
+  localDestroy,
+} = require('../services/localStorageService')
 
 const getMovies = async (req, res) => {
   const { q = '', genre, page = 1, limit = 12 } = req.query
@@ -62,11 +67,11 @@ const deleteMovie = async (req, res) => {
   if (movie.publicId && isMongoReady()) {
     try {
       await Promise.allSettled([
-        destroy(movie.publicId, 'video'),
-        movie.thumbnailPublicId ? destroy(movie.thumbnailPublicId, 'image') : Promise.resolve(),
+        localDestroy(movie.publicId, 'video'),
+        movie.thumbnailPublicId ? localDestroy(movie.thumbnailPublicId, 'image') : Promise.resolve(),
       ])
     } catch (cloudErr) {
-      console.warn('Cloudinary cleanup failed, continuing with DB delete:', cloudErr.message)
+      console.warn('Local file cleanup failed, continuing with DB delete:', cloudErr.message)
     }
   }
 
@@ -107,29 +112,26 @@ const getStats = async (_req, res) => {
 const uploadVideoFile = async (req, res) => {
   if (!req.file) return res.status(400).json({ message: 'No video file provided' })
 
-  const publicId = `vid_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-
   let result
   try {
-    result = await uploadVideo(req.file.buffer, { publicId })
+    result = await localUploadVideo(req.file.buffer, { publicId: `vid_${Date.now()}` })
   } catch (err) {
-    console.error('Cloudinary upload error:', err.message)
+    console.error('Local video upload error:', err.message)
     return res.status(502).json({ message: 'Video upload failed', error: err.message })
   }
 
   const videoUrl = result.secure_url
   const videoPublicId = result.public_id
-  const duration = result.duration ? Math.round(result.duration) : null
 
   if (req.body.movieId) {
     const movie = isMongoReady()
-      ? await Movie.findByIdAndUpdate(req.body.movieId, { videoUrl, publicId: videoPublicId, duration, status: 'ready' }, { new: true })
+      ? await Movie.findByIdAndUpdate(req.body.movieId, { videoUrl, publicId: videoPublicId, status: 'ready' }, { new: true })
       : null
     if (!movie) return res.status(404).json({ message: 'Movie not found' })
-    return res.json({ videoUrl, publicId: videoPublicId, duration, movie })
+    return res.json({ videoUrl, publicId: videoPublicId, movie })
   }
 
-  return res.status(201).json({ videoUrl, publicId: videoPublicId, duration })
+  return res.status(201).json({ videoUrl, publicId: videoPublicId })
 }
 
 const uploadPosterFile = async (req, res) => {
@@ -137,9 +139,9 @@ const uploadPosterFile = async (req, res) => {
 
   let result
   try {
-    result = await uploadPoster(req.file.buffer)
+    result = await localUploadPoster(req.file.buffer)
   } catch (err) {
-    console.error('Poster upload error:', err.message)
+    console.error('Local poster upload error:', err.message)
     return res.status(502).json({ message: 'Poster upload failed', error: err.message })
   }
 
@@ -151,9 +153,9 @@ const uploadThumbnailFile = async (req, res) => {
 
   let result
   try {
-    result = await uploadThumbnail(req.file.buffer)
+    result = await localUploadThumbnail(req.file.buffer)
   } catch (err) {
-    console.error('Thumbnail upload error:', err.message)
+    console.error('Local thumbnail upload error:', err.message)
     return res.status(502).json({ message: 'Thumbnail upload failed', error: err.message })
   }
 

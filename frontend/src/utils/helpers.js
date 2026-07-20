@@ -1,6 +1,11 @@
 export const formatViews = (views) => Number(views || 0).toLocaleString('vi-VN')
 
-export const getUniqueGenres = (movies) => ['Tất cả', ...Array.from(new Set(movies.map((movie) => movie.genreName)))]
+export const getUniqueGenres = (movies) => [
+  'Tất cả',
+  ...Array.from(
+    new Set(movies.map((movie) => movie?.genreName).filter((genre) => typeof genre === 'string' && genre)),
+  ),
+]
 
 export const demoMovies = [
   {
